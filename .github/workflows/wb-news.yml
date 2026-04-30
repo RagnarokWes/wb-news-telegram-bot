@@ -1,0 +1,53 @@
+name: WB News Bot
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    # GitHub cron работает по UTC.
+    # 07:17 UTC = 10:17 по Москве.
+    # Специально не ставим 07:00, потому что у GitHub бывают задержки в начале часа.
+    - cron: "17 7 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wb-news-bot
+  cancel-in-progress: false
+
+jobs:
+  send-wb-news:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download repository
+        uses: actions/checkout@v4
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install libraries
+        run: pip install -r requirements.txt
+
+      - name: Run bot
+        run: python main.py
+        env:
+          WB_TOKEN: ${{ secrets.WB_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          NEWS_DAYS_AGO: "1"
+
+      - name: Save state.json
+        run: |
+          if git diff --quiet state.json; then
+            echo "state.json was not changed"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add state.json
+            git commit -m "Update bot state"
+            git push
+          fi
