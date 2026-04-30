@@ -126,27 +126,13 @@ def build_telegram_messages(news_items: list, target_date) -> list:
 
     for index, item in enumerate(news_items, start=1):
         header = html.escape(clean_text(item.get("header", "Без заголовка")))
-        content = html.escape(shorten(item.get("content", ""), 700))
-        news_id = html.escape(str(item.get("id", "")))
-
-        types = item.get("types") or []
-        type_names = []
-        for t in types:
-            name = clean_text(t.get("name", ""))
-            if name:
-                type_names.append(name)
-
-        type_line = ""
-        if type_names:
-            type_line = "\n<i>" + html.escape(", ".join(type_names)) + "</i>"
-
-        block = f"<b>{index}. {header}</b>{type_line}"
-
-        if content:
-            block += f"\n\n{content}"
+        news_id = item.get("id")
 
         if news_id:
-            block += f"\n\n<code>ID новости: {news_id}</code>"
+            news_link = f"https://seller.wildberries.ru/news-v2/news-details?id={news_id}"
+            block = f'<b>{index}. {header}</b>\n<a href="{news_link}">Открыть новость</a>'
+        else:
+            block = f"<b>{index}. {header}</b>"
 
         blocks.append(block)
 
@@ -165,7 +151,6 @@ def build_telegram_messages(news_items: list, target_date) -> list:
     messages.append(current)
     return messages
 
-
 def send_telegram_message(bot_token: str, chat_id: str, text: str) -> None:
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
 
@@ -174,6 +159,7 @@ def send_telegram_message(bot_token: str, chat_id: str, text: str) -> None:
         "text": text,
         "parse_mode": "HTML",
         "disable_web_page_preview": True,
+        "disable_notification": True,
     }
 
     response = requests.post(url, json=payload, timeout=30)
