@@ -3,11 +3,16 @@ name: WB News Bot
 on:
   workflow_dispatch:
 
-  schedule:
+    schedule:
     # GitHub cron работает по UTC.
-    # 07:17 UTC = 10:17 по Москве.
-    # Специально не ставим 07:00, потому что у GitHub бывают задержки в начале часа.
+    # 07:17 UTC = 10:17 по Москве
     - cron: "17 7 * * *"
+
+    # Страховочный запуск: 08:47 UTC = 11:47 по Москве
+    - cron: "47 8 * * *"
+
+    # Ещё один страховочный запуск: 10:23 UTC = 13:23 по Москве
+    - cron: "23 10 * * *"
 
 permissions:
   contents: write
